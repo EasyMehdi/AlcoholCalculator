@@ -1,0 +1,105 @@
+﻿@page "/result"
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Primitives
+@inject NavigationManager Navigation
+
+<h3>نتایج محاسبه</h3>
+
+<div class="card">
+    <div class="card-body">
+        @if (hasResults)
+        {
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>مشخصات مصرف:</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item">تعداد شات مورد نیاز: @minShots - @maxShots</li>
+                        <li class="list-group-item">حجم کل نوشیدنی: @totalVolume.ToString("F1") میلی‌لیتر</li>
+                        <li class="list-group-item">مدت زمان نوشیدن: @duration دقیقه</li>
+                        <li class="list-group-item">زمان هوشیاری کامل: @soberTime دقیقه</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>هشدارها:</h5>
+                    <div class="alert @GetRiskAlertClass()">
+                        <strong>سطح خطر: </strong>@riskLevel
+                        @if (!string.IsNullOrEmpty(warningMessage))
+                        {
+                            <br />
+                            <strong>هشدار: </strong>
+
+                            @warningMessage
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">اطلاعات کافی برای نمایش نتایج وجود ندارد.</div>
+        }
+    </div>
+</div>
+
+<div class="mt-3">
+    <button class="btn btn-primary" @onclick="GoBack">بازگشت به محاسبه‌گر</button>
+</div>
+
+@code {
+    private int minShots;
+    private int maxShots;
+    private double totalVolume;
+    private int duration;
+    private int soberTime;
+    private string riskLevel = "";
+    private string warningMessage = "";
+    private bool hasResults = false;
+
+    protected override void OnInitialized()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+
+        if (query.TryGetValue("minShots", out var minShotsStr))
+        {
+            int.TryParse(minShotsStr, out minShots);
+
+            if (query.TryGetValue("maxShots", out var maxShotsStr))
+                int.TryParse(maxShotsStr, out maxShots);
+
+            if (query.TryGetValue("totalVolume", out var totalVolumeStr))
+                double.TryParse(totalVolumeStr, out totalVolume);
+
+            if (query.TryGetValue("duration", out var durationStr))
+                int.TryParse(durationStr, out duration);
+
+            if (query.TryGetValue("soberTime", out var soberTimeStr))
+                int.TryParse(soberTimeStr, out soberTime);
+
+            riskLevel = query.TryGetValue("risk", out var risk) ? risk.ToString() : "";
+
+            if (query.TryGetValue("warning", out var warning))
+                warningMessage = Uri.UnescapeDataString(warning.ToString());
+
+            hasResults = true;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private string GetRiskAlertClass()
+    {
+        return riskLevel switch
+        {
+            "بی‌خطر" => "alert-success",
+            "کم" => "alert-info",
+            "متوسط" => "alert-warning",
+            "بالا" or "خیلی بالا" => "alert-danger",
+            "خطرناک" or "بسیار خطرناک" or "کشنده" => "alert-dark",
+            _ => "alert-secondary"
+        };
+    }
+}

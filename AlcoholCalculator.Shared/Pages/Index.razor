@@ -1,0 +1,169 @@
+﻿@page "/"
+@using AlcoholCalculator.Shared.Models
+@using AlcoholCalculator.Shared.Services
+@inject IDrinkService DrinkService
+@inject IAlcoholCalculatorService CalculatorService
+@inject NavigationManager Navigation
+
+<h3>هشیارسنج الکل</h3>
+
+<EditForm Model="@Request" OnValidSubmit="Calculate" class="needs-validation" novalidate>
+    <DataAnnotationsValidator />
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label for="drinkSelect" class="form-label">نوع نوشیدنی</label>
+            <InputSelect @bind-Value="selectedDrinkId" class="form-select" id="drinkSelect" @onchange="OnDrinkChanged">
+                <option value="0">سفارشی</option>
+                @foreach (var drink in drinks)
+                {
+                    <option value="@drink.Id">@drink.PersianName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="col-md-6">
+            <label for="weight" class="form-label">وزن (کیلوگرم)</label>
+            <InputNumber @bind-Value="Request.Weight" class="form-control" id="weight"
+                         placeholder="مثلاً 70" />
+            <ValidationMessage For="@(() => Request.Weight)" />
+        </div>
+
+        <div class="col-md-6">
+            <label for="age" class="form-label">سن</label>
+            <InputNumber @bind-Value="Request.Age" class="form-control" id="age"
+                         placeholder="مثلاً 30" />
+            <ValidationMessage For="@(() => Request.Age)" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">جنسیت</label>
+            <div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" name="gender"
+                           value="male" @onchange="@((e) => Request.Gender = "male")"
+                           checked="@(Request.Gender == "male")" />
+                    <label class="form-check-label">مرد</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" name="gender"
+                           value="female" @onchange="@((e) => Request.Gender = "female")"
+                           checked="@(Request.Gender == "female")" />
+                    <label class="form-check-label">زن</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="intoxication" class="form-label">سطح مستی مورد نظر</label>
+            <InputSelect @bind-Value="Request.TargetIntoxication" class="form-select" id="intoxication">
+                <option value="@IntoxicationLevel.Sober">هوشیار</option>
+                <option value="@IntoxicationLevel.Mild">خفیف</option>
+                <option value="@IntoxicationLevel.Euphoric">سرخوش (لذت‌بخش)</option>
+                <option value="@IntoxicationLevel.Impaired">اختلال حسی-حرکتی</option>
+                <option value="@IntoxicationLevel.Confused">گیج و بی‌حال</option>
+                <option value="@IntoxicationLevel.Stupor">بی‌حسی (نزدیک به بیهوشی)</option>
+                <option value="@IntoxicationLevel.Coma">کما</option>
+                <option value="@IntoxicationLevel.Lethal">مرگ‌آور</option>
+            </InputSelect>
+        </div>
+
+        <div class="col-md-6">
+            <label for="foodLevel" class="form-label">میزان غذا قبل از مصرف</label>
+            <InputSelect @bind-Value="Request.FoodLevel" class="form-select" id="foodLevel">
+                <option value="@FoodLevel.Empty">معده خالی</option>
+                <option value="@FoodLevel.Light">سبک</option>
+                <option value="@FoodLevel.Medium">متوسط</option>
+                <option value="@FoodLevel.Heavy">سنگین</option>
+            </InputSelect>
+        </div>
+
+        @if (selectedDrinkId == 0)
+        {
+            <div class="col-md-4">
+                <label for="alcoholPercentage" class="form-label">درصد الکل</label>
+                <InputNumber @bind-Value="Request.CustomAlcoholPercentage" class="form-control"
+                             id="alcoholPercentage" placeholder="مثلاً 40" />
+                <ValidationMessage For="@(() => Request.CustomAlcoholPercentage)" />
+            </div>
+
+            <div class="col-md-4">
+                <label for="shotVolume" class="form-label">حجم هر شات (میلی‌لیتر)</label>
+                <InputNumber @bind-Value="Request.CustomShotVolume" class="form-control"
+                             id="shotVolume" placeholder="مثلاً 44" />
+                <ValidationMessage For="@(() => Request.CustomShotVolume)" />
+            </div>
+
+            <div class="col-md-4">
+                <label for="shotInterval" class="form-label">فاصله زمانی بین شات ها (دقیقه)</label>
+                <InputNumber @bind-Value="Request.CustomShotInterval" class="form-control"
+                             id="shotInterval" placeholder="مثلاً 30" />
+                <ValidationMessage For="@(() => Request.CustomShotInterval)" />
+            </div>
+        }
+
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">محاسبه</button>
+        <button type="button" class="btn btn-secondary" @onclick="Reset">بازنشانی</button>
+    </div>
+</EditForm>
+
+@code {
+    private CalculationRequest Request { get; set; } = new();
+    private List<Drink> drinks = new();
+    private int selectedDrinkId = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        drinks = await DrinkService.GetDrinksAsync();
+    }
+
+    private async void Calculate()
+    {
+        if (selectedDrinkId > 0)
+        {
+            Request.SelectedDrink = await DrinkService.GetDrinkAsync(selectedDrinkId);
+        }
+
+        var result = CalculatorService.CalculateIntoxication(Request);
+
+        // استفاده از StringBuilder برای ساخت URL ایمن
+        var queryBuilder = new System.Text.StringBuilder();
+        queryBuilder.Append($"/result?minShots={result.MinShots}");
+        queryBuilder.Append($"&maxShots={result.MaxShots}");
+        queryBuilder.Append($"&totalVolume={result.TotalVolume}");
+        queryBuilder.Append($"&duration={result.DrinkingDuration}");
+        queryBuilder.Append($"&soberTime={result.SoberingTime}");
+        queryBuilder.Append($"&risk={Uri.EscapeDataString(result.RiskLevel)}");
+        queryBuilder.Append($"&warning={Uri.EscapeDataString(result.WarningMessage)}");
+
+        Navigation.NavigateTo(queryBuilder.ToString());
+    }
+
+    private void Reset()
+    {
+        Request = new CalculationRequest();
+        selectedDrinkId = 0;
+        StateHasChanged();
+    }
+
+    private async Task OnDrinkChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int drinkId))
+        {
+            selectedDrinkId = drinkId;
+            if (drinkId > 0)
+            {
+                var drink = await DrinkService.GetDrinkAsync(drinkId);
+                if (drink != null)
+                {
+                    Request.CustomAlcoholPercentage = drink.AlcoholPercentage;
+                    Request.CustomShotVolume = drink.ShotVolume;
+                    Request.CustomShotInterval = drink.ShotInterval;
+                }
+            }
+            StateHasChanged();
+        }
+    }
+}

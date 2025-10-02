@@ -1,0 +1,199 @@
+﻿@page "/drinks"
+@using AlcoholCalculator.Shared.Models
+@using AlcoholCalculator.Shared.Services
+@inject IDrinkService DrinkService
+@inject IJSRuntime JS
+
+<h3>لیست نوشیدنی ها</h3>
+
+<button class="btn btn-primary mb-3" @onclick="ShowAddModal">افزودن نوشیدنی جدید</button>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>نام فارسی</th>
+                <th>نام انگلیسی</th>
+                <th>دسته بندی</th>
+                <th>حجم شات (ml)</th>
+                <th>فاصله شات‌ها (دقیقه)</th>
+                <th>درصد الکل</th>
+                <th>عملیات</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var drink in drinks)
+            {
+                <tr>
+                    <td>@drink.PersianName</td>
+                    <td>@drink.EnglishName</td>
+                    <td>@GetCategoryName(drink.Category)</td>
+                    <td>@drink.ShotVolume</td>
+                    <td>@drink.ShotInterval</td>
+                    <td>@drink.AlcoholPercentage%</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" @onclick="() => ShowEditModal(drink)">ویرایش</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteDrink(drink.Id)">حذف</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal برای افزودن/ویرایش -->
+@if (showModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(editingDrink?.Id > 0 ? "ویرایش نوشیدنی" : "افزودن نوشیدنی جدید")</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@editingDrink" OnValidSubmit="SaveDrink">
+                        <DataAnnotationsValidator />
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">نام فارسی</label>
+                                <InputText @bind-Value="editingDrink.PersianName" class="form-control" />
+                                <ValidationMessage For="@(() => editingDrink.PersianName)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">نام انگلیسی</label>
+                                <InputText @bind-Value="editingDrink.EnglishName" class="form-control" />
+                                <ValidationMessage For="@(() => editingDrink.EnglishName)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">دسته بندی</label>
+                                <InputSelect @bind-Value="editingDrink.Category" class="form-select">
+                                    <option value="@DrinkCategory.Whiskey">ویسکی</option>
+                                    <option value="@DrinkCategory.Vodka">ودکا</option>
+                                    <option value="@DrinkCategory.Beer">آبجو</option>
+                                    <option value="@DrinkCategory.Wine">شراب</option>
+                                    <option value="@DrinkCategory.Cocktail">کوکتل</option>
+                                    <option value="@DrinkCategory.Other">سایر</option>
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">حجم شات (میلی‌لیتر)</label>
+                                <InputNumber @bind-Value="editingDrink.ShotVolume" class="form-control" />
+                                <ValidationMessage For="@(() => editingDrink.ShotVolume)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">فاصله شات‌ها (دقیقه)</label>
+                                <InputNumber @bind-Value="editingDrink.ShotInterval" class="form-control" />
+                                <ValidationMessage For="@(() => editingDrink.ShotInterval)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">درصد الکل</label>
+                                <InputNumber @bind-Value="editingDrink.AlcoholPercentage" class="form-control" />
+                                <ValidationMessage For="@(() => editingDrink.AlcoholPercentage)" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">غذاهای مناسب</label>
+                                <InputTextArea @bind-Value="editingDrink.SuitableFoods" class="form-control" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">غذاهایی باید پرهیز کرد</label>
+                                <InputTextArea @bind-Value="editingDrink.AvoidFoods" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="modal-footer mt-3">
+                            <button type="submit" class="btn btn-primary">ذخیره</button>
+                            <button type="button" class="btn btn-secondary" @onclick="CloseModal">انصراف</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Drink> drinks = new();
+    private bool showModal = false;
+    private Drink editingDrink = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDrinks();
+    }
+
+    private async Task LoadDrinks()
+    {
+        drinks = await DrinkService.GetDrinksAsync();
+        StateHasChanged();
+    }
+
+    private void ShowAddModal()
+    {
+        editingDrink = new Drink();
+        showModal = true;
+        StateHasChanged();
+    }
+
+    private void ShowEditModal(Drink drink)
+    {
+        editingDrink = new Drink
+        {
+            Id = drink.Id,
+            PersianName = drink.PersianName,
+            EnglishName = drink.EnglishName,
+            Category = drink.Category,
+            ShotVolume = drink.ShotVolume,
+            ShotInterval = drink.ShotInterval,
+            AlcoholPercentage = drink.AlcoholPercentage,
+            SuitableFoods = drink.SuitableFoods,
+            AvoidFoods = drink.AvoidFoods
+        };
+        showModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+        StateHasChanged();
+    }
+
+    private async Task SaveDrink()
+    {
+        if (editingDrink.Id > 0)
+        {
+            await DrinkService.UpdateDrinkAsync(editingDrink);
+        }
+        else
+        {
+            await DrinkService.AddDrinkAsync(editingDrink);
+        }
+
+        showModal = false;
+        await LoadDrinks();
+    }
+
+    private async Task DeleteDrink(int id)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "آیا از حذف این نوشیدنی مطمئن هستید؟");
+        if (confirmed)
+        {
+            await DrinkService.DeleteDrinkAsync(id);
+            await LoadDrinks();
+        }
+    }
+
+    private string GetCategoryName(DrinkCategory category)
+    {
+        return category switch
+        {
+            DrinkCategory.Whiskey => "ویسکی",
+            DrinkCategory.Vodka => "ودکا",
+            DrinkCategory.Beer => "آبجو",
+            DrinkCategory.Wine => "شراب",
+            DrinkCategory.Cocktail => "کوکتل",
+            DrinkCategory.Other => "سایر",
+            _ => "نامشخص"
+        };
+    }
+}
