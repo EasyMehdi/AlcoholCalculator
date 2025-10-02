@@ -1,11 +1,16 @@
 ﻿<Router AppAssembly="@typeof(Layout.MainLayout).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
     </Found>
     <NotFound>
         <LayoutView Layout="@typeof(Layout.MainLayout)">
-            <p>Sorry, nothing here yet!</p>
+            <div class="container mt-5">
+                <div class="alert alert-warning">
+                    <h3>صفحه مورد نظر یافت نشد</h3>
+                    <p>متأسفیم، اما صفحه درخواستی شما وجود ندارد.</p>
+                    <a href="/" class="btn btn-primary">بازگشت به صفحه اصلی</a>
+                </div>
+            </div>
         </LayoutView>
     </NotFound>
 </Router>

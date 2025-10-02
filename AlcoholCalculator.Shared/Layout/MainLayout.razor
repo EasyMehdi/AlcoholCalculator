@@ -1,21 +1,18 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <main>
-        @* <div class="text-center">
-            <h1 class="h4">محاسبه‌گر میزان الکل</h1>
-        </div> *@
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-
+<div class="app-container">
     <NavMenu />
-</div>
+    
+    <main class="main-content">
+        <div class="top-bar">
+            <div class="top-bar-content">
+                <span class="app-title-mobile">AlcoholCalculator</span>
+                <a href="about" class="about-link">درباره</a>
+            </div>
+        </div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+        <div class="content-area">
+            @Body
+        </div>
+    </main>
 </div>
