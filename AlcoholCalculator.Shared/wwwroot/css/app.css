@@ -27,7 +27,7 @@ html, body {
     position: relative;
 }
 
-/* ======= استایل‌های سایدبار ======= */
+/* استایل‌های سایدبار */
 .sidebar {
     background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
     width: var(--sidebar-width-expanded);
@@ -63,24 +63,6 @@ html, body {
     white-space: nowrap;
     opacity: 1;
     transition: opacity var(--transition-speed) ease-in-out;
-    display: flex;
-    align-items: center;
-}
-
-/* آیکون برند */
-.brand-icon {
-    font-size: 1.5rem;
-    margin-left: 0.5rem;
-}
-
-.brand-text {
-    transition: opacity var(--transition-speed) ease-in-out;
-}
-
-.sidebar.collapsed .brand-text {
-    opacity: 0;
-    width: 0;
-    overflow: hidden;
 }
 
 .sidebar.collapsed .navbar-brand {
@@ -109,22 +91,34 @@ html, body {
         transform: scale(1.05);
     }
 
-/* آیکون toggle بهبود یافته */
 .toggle-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: white;
+    position: relative;
     transition: all var(--transition-speed) ease-in-out;
 }
 
-    .toggle-icon i {
-        font-size: 1.2rem;
-        transition: transform var(--transition-speed) ease-in-out;
+    .toggle-icon::before,
+    .toggle-icon::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 2px;
+        background: white;
+        transition: all var(--transition-speed) ease-in-out;
     }
 
-.sidebar.collapsed .toggle-icon i {
+    .toggle-icon::before {
+        top: -6px;
+    }
+
+    .toggle-icon::after {
+        top: 6px;
+    }
+
+.sidebar.collapsed .toggle-icon {
     transform: rotate(180deg);
 }
 
@@ -156,7 +150,6 @@ html, body {
     transition: all 0.2s ease-in-out;
     white-space: nowrap;
     overflow: hidden;
-    position: relative;
 }
 
     .nav-link:hover {
@@ -195,43 +188,6 @@ html, body {
 .sidebar.collapsed .nav-link {
     justify-content: center;
     padding: 0.75rem;
-}
-
-/* Tooltip برای حالت collapsed */
-.nav-tooltip {
-    position: absolute;
-    right: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    background: var(--primary-color);
-    color: white;
-    padding: 0.5rem 0.75rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s ease-in-out;
-    pointer-events: none;
-    z-index: 1001;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-    .nav-tooltip::after {
-        content: '';
-        position: absolute;
-        left: 100%;
-        top: 50%;
-        transform: translateY(-50%);
-        border-width: 5px;
-        border-style: solid;
-        border-color: transparent transparent transparent var(--primary-color);
-    }
-
-.nav-link:hover .nav-tooltip {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(-50%) translateX(-5px);
 }
 
 /* محتوای اصلی */
@@ -309,47 +265,17 @@ html, body {
         top: 0.5rem;
     }
 
-/* ======= استایل‌های ریسپانسیو ======= */
+/* استایل‌های ریسپانسیو */
 @media (max-width: 768px) {
     .sidebar {
-        width: 280px;
+        width: var(--sidebar-width-expanded);
         transform: translateX(0);
-        box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
     }
 
         .sidebar.collapsed {
             transform: translateX(100%);
-            width: 280px;
+            width: var(--sidebar-width-expanded);
         }
-
-    .sidebar-header {
-        min-height: 80px;
-        padding: 1rem 1.5rem;
-    }
-
-    .menu-toggle {
-        width: 44px;
-        height: 44px;
-    }
-
-    .toggle-icon {
-        width: 28px;
-        height: 28px;
-    }
-
-        .toggle-icon i {
-            font-size: 1.4rem;
-        }
-
-    /* اطمینان از نمایش toggle در موبایل */
-    .sidebar.collapsed .menu-toggle {
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-        background: var(--primary-color);
-        z-index: 1002;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    }
 
     .main-content {
         margin-right: 0 !important;
@@ -361,11 +287,7 @@ html, body {
     }
 
     .sidebar .navbar-brand {
-        display: flex;
-    }
-
-    .sidebar.collapsed .navbar-brand {
-        display: none;
+        display: block;
     }
 }
 
@@ -373,49 +295,6 @@ html, body {
     .app-title-mobile {
         display: none;
     }
-
-    .sidebar.collapsed .nav-tooltip {
-        display: block;
-    }
-
-    .sidebar:not(.collapsed) .nav-tooltip {
-        display: none;
-    }
-}
-
-/* بهبود تعامل لمسی برای موبایل */
-.menu-toggle {
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-}
-
-.nav-link {
-    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
-    touch-action: manipulation;
-}
-
-/* انیمیشن‌های بهبود یافته */
-.sidebar {
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.nav-content {
-    transition: all 0.3s ease-in-out;
-}
-
-/* استایل برای حالت فعال */
-.nav-link.active {
-    background: linear-gradient(135deg, rgba(52, 152, 219, 0.2) 0%, rgba(41, 128, 185, 0.3) 100%);
-    color: white;
-    border-right: 3px solid var(--accent-color);
-    box-shadow: inset 0 0 10px rgba(52, 152, 219, 0.2);
-}
-
-/* بهبود hover effects */
-.nav-link:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateX(-2px);
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
 /* استایل‌های بوت استرپ فارسی */

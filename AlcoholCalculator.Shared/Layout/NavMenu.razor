@@ -1,14 +1,9 @@
 ﻿<div class="sidebar @_menuState">
     <div class="sidebar-header">
-        <div class="navbar-brand">
-            <i class="bi-cup-hot-fill brand-icon"></i>
-            <span class="brand-text">AlcoholCalculator</span>
-        </div>
         <button class="menu-toggle" @onclick="ToggleMenu" title="باز/بستن منو">
-            <span class="toggle-icon">
-                <i class="bi @(_menuState == "expanded" ? "bi-chevron-right" : "bi-chevron-left")"></i>
-            </span>
+            <span class="toggle-icon"></span>
         </button>
+        <div class="navbar-brand center">هشیارسنج</div>
     </div>
 
     <div class="nav-content">
@@ -16,15 +11,13 @@
             <div class="nav-item">
                 <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                     <span class="nav-icon bi bi-calculator"></span>
-                    <span class="nav-text">هشیارسنج</span>
-                    <span class="nav-tooltip">هشیارسنج</span>
+                    <span class="nav-text">محاسبه</span>
                 </NavLink>
             </div>
             <div class="nav-item">
                 <NavLink class="nav-link" href="drinks">
                     <span class="nav-icon bi bi-list-ul"></span>
                     <span class="nav-text">لیست نوشیدنی ها</span>
-                    <span class="nav-tooltip">لیست نوشیدنی ها</span>
                 </NavLink>
             </div>
         </nav>
